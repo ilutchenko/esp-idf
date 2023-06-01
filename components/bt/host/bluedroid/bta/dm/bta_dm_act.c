@@ -4176,6 +4176,11 @@ static void bta_dm_set_eir (char *local_name)
                 }
             }
 
+            const uint8_t IAP2_UUID[] = {0x00, 0x00, 0x00, 0x00, 0xde, 0xca, 0xfa, 0xde,
+                                    0xde, 0xca, 0xde, 0xaf, 0xde, 0xca, 0xca, 0xff};
+            ARRAY_TO_STREAM(p, IAP2_UUID, 16);
+            num_uuid++;
+
             UINT8_TO_STREAM(p_length, num_uuid * LEN_UUID_128 + 1);
             UINT8_TO_STREAM(p_type, data_type);
             eir_type[eir_type_num++] = data_type;
