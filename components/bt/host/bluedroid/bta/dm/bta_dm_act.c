@@ -4370,21 +4370,34 @@ static void bta_dm_eir_search_services( tBTM_INQ_RESULTS  *p_result,
 ** Returns          None
 **
 *******************************************************************************/
-void bta_dm_eir_update_uuid(UINT16 uuid16, BOOLEAN adding)
+void bta_dm_eir_update_uuid(tBT_UUID uuid, BOOLEAN adding)
 {
-    /* if this UUID is not advertised in EIR */
-    if ( !BTM_HasEirService( p_bta_dm_eir_cfg->uuid_mask, uuid16 )) {
-        return;
-    }
+    /* 32 and 128-bit UUIDs go to the bta_dm_cb.custom_uuid array */
+    if ((uuid.len == LEN_UUID_32) || (uuid.len == LEN_UUID_128)) {
+        if (adding) {
+            APPL_TRACE_EVENT("Adding %d-bit UUID into EIR", uuid.len * 8);
 
-    if ( adding ) {
-        APPL_TRACE_EVENT("Adding UUID=0x%04X into EIR", uuid16);
+            BTM_AddCustomEirService(bta_dm_cb.custom_uuid, uuid);
+        } else {
+            APPL_TRACE_EVENT("Removing %d-bit UUID from EIR", uuid.len * 8);
 
-        BTM_AddEirService( bta_dm_cb.eir_uuid, uuid16 );
+            BTM_RemoveCustomEirService(bta_dm_cb.custom_uuid, uuid);
+        }
     } else {
-        APPL_TRACE_EVENT("Removing UUID=0x%04X from EIR", uuid16);
+        /* if this UUID is not advertised in EIR */
+        if (!BTM_HasEirService(p_bta_dm_eir_cfg->uuid_mask, uuid.uu.uuid16)) {
+            return;
+        }
 
-        BTM_RemoveEirService( bta_dm_cb.eir_uuid, uuid16 );
+        if (adding) {
+            APPL_TRACE_EVENT("Adding UUID=0x%04X into EIR", uuid.uu.uuid16);
+
+            BTM_AddEirService(bta_dm_cb.eir_uuid, uuid.uu.uuid16);
+        } else {
+            APPL_TRACE_EVENT("Removing UUID=0x%04X from EIR", uuid.uu.uuid16);
+
+            BTM_RemoveEirService(bta_dm_cb.eir_uuid, uuid.uu.uuid16);
+        }
     }
 #if CLASSIC_BT_INCLUDED
     bta_dm_set_eir (NULL);

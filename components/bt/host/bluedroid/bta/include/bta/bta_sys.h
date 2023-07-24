@@ -143,7 +143,7 @@ typedef void (tBTA_SYS_SSR_CFG_CBACK)(UINT8 id, UINT8 app_id, UINT16 latency, UI
 
 #if (BTA_EIR_CANNED_UUID_LIST != TRUE)
 /* eir callback for adding/removeing UUID */
-typedef void (tBTA_SYS_EIR_CBACK)(UINT16 uuid16, BOOLEAN adding);
+typedef void (tBTA_SYS_EIR_CBACK)(tBT_UUID uuid, BOOLEAN adding);
 #endif
 
 /* registration structure */
