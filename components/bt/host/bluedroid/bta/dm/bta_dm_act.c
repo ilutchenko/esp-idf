@@ -4184,7 +4184,7 @@ static void bta_dm_set_eir (char *local_name)
             for (custom_uuid_idx = 0; custom_uuid_idx < BTA_EIR_SERVER_NUM_CUSTOM_UUID; custom_uuid_idx++) {
                 if (bta_dm_cb.custom_uuid[custom_uuid_idx].len == LEN_UUID_128) {
                     if ( num_uuid < max_num_uuid ) {
-                        ARRAY16_TO_STREAM(p, bta_dm_cb.custom_uuid[custom_uuid_idx].uu.uuid128);
+                        ARRAY_TO_STREAM(p, bta_dm_cb.custom_uuid[custom_uuid_idx].uu.uuid128, LEN_UUID_128);
                         num_uuid++;
                     } else {
                         data_type = BTM_EIR_MORE_128BITS_UUID_TYPE;
