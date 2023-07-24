@@ -257,7 +257,6 @@ static int free_sdp_slot(int id)
 static int add_raw_sdp(const bluetooth_sdp_record* rec)
 {
     tSDP_PROTOCOL_ELEM  protoList [2];
-    UINT16              service = 0;
     UINT16              browse = UUID_SERVCLASS_PUBLIC_BROWSE_GROUP;
     bool                status = true;
     // Buffer capable to hold 2, 4 and 16-byte UUIDs
@@ -273,18 +272,15 @@ static int add_raw_sdp(const bluetooth_sdp_record* rec)
         return sdp_handle;
     }
 
-    if (rec->hdr.bt_uuid.len == 16) {
-        memcpy(&service, &rec->hdr.bt_uuid.uuid.uuid128[2], sizeof(service));
-        UINT8_TO_BE_STREAM(p_temp, (UUID_DESC_TYPE << 3) | SIZE_SIXTEEN_BYTES);
-        ARRAY_TO_BE_STREAM(p_temp, rec->hdr.bt_uuid.uuid.uuid128, LEN_UUID_128);
-    } else if (rec->hdr.bt_uuid.len == 2) {
-        memcpy(&service, &rec->hdr.bt_uuid.uuid.uuid16, sizeof(service));
-        UINT8_TO_BE_STREAM(p_temp, (UUID_DESC_TYPE << 3) | SIZE_TWO_BYTES);
-        UINT16_TO_BE_STREAM(p_temp, rec->hdr.bt_uuid.uuid.uuid16);
-    } else if (rec->hdr.bt_uuid.len == 4) {
-        memcpy(&service, &rec->hdr.bt_uuid.uuid.uuid16, sizeof(service));
-        UINT8_TO_BE_STREAM(p_temp, (UUID_DESC_TYPE << 3) | SIZE_FOUR_BYTES);
-        UINT32_TO_BE_STREAM(p_temp, rec->hdr.bt_uuid.uuid.uuid32);
+    if (rec->hdr.bt_uuid.len == ESP_UUID_LEN_16) {
+        UINT8_TO_BE_STREAM (p_temp, (UUID_DESC_TYPE << 3) | SIZE_TWO_BYTES);
+        UINT16_TO_BE_STREAM (p_temp, rec->hdr.bt_uuid.uuid.uuid16);
+    } else if (rec->hdr.bt_uuid.len == ESP_UUID_LEN_32) {
+        UINT8_TO_BE_STREAM (p_temp, (UUID_DESC_TYPE << 3) | SIZE_FOUR_BYTES);
+        UINT32_TO_BE_STREAM (p_temp, rec->hdr.bt_uuid.uuid.uuid32);
+    } else if (rec->hdr.bt_uuid.len == ESP_UUID_LEN_128) {
+        UINT8_TO_BE_STREAM (p_temp, (UUID_DESC_TYPE << 3) | SIZE_SIXTEEN_BYTES);
+        ARRAY_TO_BE_STREAM (p_temp, rec->hdr.bt_uuid.uuid.uuid128, LEN_UUID_128);
     } else {
         SDP_DeleteRecord(sdp_handle);
         sdp_handle = 0;
@@ -331,7 +327,13 @@ static int add_raw_sdp(const bluetooth_sdp_record* rec)
         sdp_handle = 0;
         BTC_TRACE_ERROR("%s() FAILED, status = %d", __func__, status);
     } else {
-        bta_sys_add_uuid(service);
+        if (rec->hdr.bt_uuid.len == ESP_UUID_LEN_16) {
+            bta_sys_add_uuid(rec->hdr.bt_uuid.uuid.uuid16);
+        } else if (rec->hdr.bt_uuid.len == ESP_UUID_LEN_32) {
+            bta_sys_add_uuid_32(rec->hdr.bt_uuid.uuid.uuid32);
+        } else if (rec->hdr.bt_uuid.len == ESP_UUID_LEN_128) {
+            bta_sys_add_uuid_128((UINT8 *)&rec->hdr.bt_uuid.uuid.uuid128);
+        }
         BTC_TRACE_DEBUG("%s():  SDP Registered (handle 0x%08x)", __func__, sdp_handle);
     }
 
