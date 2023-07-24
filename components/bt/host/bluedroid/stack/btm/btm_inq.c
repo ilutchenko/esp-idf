@@ -2537,7 +2537,77 @@ void BTM_AddEirService( UINT32 *p_eir_uuid, UINT16 uuid16 )
 
 /*******************************************************************************
 **
-** Function         BTM_RemoveEirService
+** Function         btm_find_empty_custom_uuid_slot
+**
+** Description      Helper function for custom service managing routines.
+**
+** Parameters       custom_uuid - pointer to custom_uuid array in tBTA_DM_CB
+**                  uuid - UUID struct
+**
+** Returns          Slot number if there is empty slot,
+**                  otherwise - BTA_EIR_SERVER_NUM_CUSTOM_UUID
+**
+*******************************************************************************/
+static UINT8 btm_find_empty_custom_uuid_slot(tBT_UUID *custom_uuid, tBT_UUID uuid)
+{
+    for ( UINT8 xx = 0; xx < BTA_EIR_SERVER_NUM_CUSTOM_UUID; xx++ ) {
+        if ( custom_uuid[xx].len == 0 ) {
+            return xx;
+        }
+    }
+    return BTA_EIR_SERVER_NUM_CUSTOM_UUID;
+}
+
+/*******************************************************************************
+**
+** Function         btm_find_match_custom_uuid_slot
+**
+** Description      Helper function for custom service managing routines.
+**
+** Parameters       custom_uuid - pointer to custom_uuid array in tBTA_DM_CB
+**                  uuid - UUID struct
+**
+** Returns          Slot number if given UUID is already in slots array,
+**                  otherwise - BTA_EIR_SERVER_NUM_CUSTOM_UUID
+**
+*******************************************************************************/
+static UINT8 btm_find_match_custom_uuid_slot(tBT_UUID *custom_uuid, tBT_UUID uuid)
+{
+    for ( UINT8 xx = 0; xx < BTA_EIR_SERVER_NUM_CUSTOM_UUID; xx++ ) {
+        if ( !memcmp (&custom_uuid[xx].uu, &uuid.uu, uuid.len) ) {
+            return xx;
+        }
+    }
+    return BTA_EIR_SERVER_NUM_CUSTOM_UUID;
+}
+
+/*******************************************************************************
+**
+** Function         BTM_AddCustomEirService
+**
+** Description      This function is called to add a custom UUID.
+**
+** Parameters       custom_uuid - pointer to custom_uuid array in tBTA_DM_CB
+**                  uuid - UUID struct
+**
+** Returns          None
+**
+*******************************************************************************/
+void BTM_AddCustomEirService( tBT_UUID *custom_uuid, tBT_UUID uuid )
+{
+    UINT8 empty_slot = btm_find_custom_uuid_slots(custom_uuid, uuid);
+
+    if (empty_slot == BTA_EIR_SERVER_NUM_CUSTOM_UUID) {
+        BTM_TRACE_ERROR("No space to add UUID for EIR");
+    } else {
+        memcpy (&(custom_uuid[empty_slot]), &(uuid), sizeof(tBT_UUID));
+        BTM_TRACE_EVENT("UUID saved in %d slot", empty_slot);
+    }
+}
+
+/*******************************************************************************
+**
+** Function         BTM_RemoveCustomEirService
 **
 ** Description      This function is called to remove a service in bit map of UUID list.
 **
@@ -2554,6 +2624,32 @@ void BTM_RemoveEirService( UINT32 *p_eir_uuid, UINT16 uuid16 )
     service_id = btm_convert_uuid_to_eir_service(uuid16);
     if ( service_id < BTM_EIR_MAX_SERVICES ) {
         BTM_EIR_CLR_SERVICE( p_eir_uuid, service_id );
+    }
+}
+
+/*******************************************************************************
+**
+** Function         BTM_RemoveCustomEirService
+**
+** Description      This function is called to remove a a custom UUID.
+**
+** Parameters       custom_uuid - pointer to custom_uuid array in tBTA_DM_CB
+**                  uuid - UUID struct
+**
+** Returns          None
+**
+*******************************************************************************/
+void BTM_RemoveCustomEirService( tBT_UUID *custom_uuid, tBT_UUID uuid )
+{
+    UINT8 empty_slot, match_slot;
+
+    btm_find_custom_uuid_slots(custom_uuid, uuid, &empty_slot, &match_slot);
+
+    if (match_slot == BTA_EIR_SERVER_NUM_CUSTOM_UUID) {
+        BTM_TRACE_WARNING("UUID is not found for EIR");
+        return;
+    } else {
+        memset (&(custom_uuid[match_slot]), 0, sizeof(tBT_UUID));
     }
 }
 
