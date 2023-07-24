@@ -4375,6 +4375,10 @@ void bta_dm_eir_update_uuid(tBT_UUID uuid, BOOLEAN adding)
     /* 32 and 128-bit UUIDs go to the bta_dm_cb.custom_uuid array */
     if ((uuid.len == LEN_UUID_32) || (uuid.len == LEN_UUID_128)) {
         if (adding) {
+            if (BTM_HasCustomEirService(bta_dm_cb.custom_uuid, uuid)) {
+                APPL_TRACE_EVENT("UUID is already added for EIR");
+                return;
+            }
             APPL_TRACE_EVENT("Adding %d-bit UUID into EIR", uuid.len * 8);
 
             BTM_AddCustomEirService(bta_dm_cb.custom_uuid, uuid);
