@@ -3998,6 +3998,23 @@ tBTM_EIR_SEARCH_RESULT BTM_HasInquiryEirService( tBTM_INQ_RESULTS *p_results,
 
 /*******************************************************************************
 **
+** Function         BTM_HasCustomEirService
+**
+** Description      This function is called to know if UUID is already in custom 
+**                  list.
+**
+** Parameters       custom_uuid - pointer to custom_uuid array in tBTA_DM_CB
+**                  uuid - UUID struct
+**
+** Returns          TRUE - if found
+**                  FALSE - if not found
+**
+*******************************************************************************/
+//extern
+BOOLEAN BTM_HasCustomEirService( tBT_UUID *custom_uuid, tBT_UUID uuid );
+
+/*******************************************************************************
+**
 ** Function         BTM_AddEirService
 **
 ** Description      This function is called to add a service in bit map of UUID list.
