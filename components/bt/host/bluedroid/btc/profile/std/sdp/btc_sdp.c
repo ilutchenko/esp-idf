@@ -114,6 +114,44 @@ static void set_sdp_handle(int id, int handle)
     osi_mutex_unlock(&sdp_local_param.sdp_slot_mutex);
 }
 
+
+static bool get_sdp_record_by_handle(int handle, bluetooth_sdp_record* record)
+{
+    sdp_slot_t *slot = NULL;
+
+    osi_mutex_lock(&sdp_local_param.sdp_slot_mutex, OSI_MUTEX_MAX_TIMEOUT);
+
+    for (int i = 0; i < SDP_MAX_RECORDS; i++) {
+        slot = sdp_local_param.sdp_slots[i];
+        if ((slot != NULL) && (slot->sdp_handle == handle)) {
+            memcpy(record, slot->record_data, sizeof(bluetooth_sdp_record));
+            osi_mutex_unlock(&sdp_local_param.sdp_slot_mutex);
+            return true;
+        }
+    }
+
+    osi_mutex_unlock(&sdp_local_param.sdp_slot_mutex);
+    return false;
+}
+
+static int get_sdp_slot_id_by_handle(int handle)
+{
+    sdp_slot_t *slot = NULL;
+
+    osi_mutex_lock(&sdp_local_param.sdp_slot_mutex, OSI_MUTEX_MAX_TIMEOUT);
+
+    for (int i = 0; i < SDP_MAX_RECORDS; i++) {
+        slot = sdp_local_param.sdp_slots[i];
+        if ((slot != NULL) && (slot->sdp_handle == handle)) {
+            osi_mutex_unlock(&sdp_local_param.sdp_slot_mutex);
+            return i;
+        }
+    }
+
+    osi_mutex_unlock(&sdp_local_param.sdp_slot_mutex);
+    return -1;
+}
+
 static sdp_slot_t *start_create_sdp(int id)
 {
     sdp_slot_t *sdp_slot = NULL;
@@ -984,9 +1022,29 @@ static void btc_sdp_remove_record(btc_sdp_args_t *arg)
             break;
         }
 
+        bluetooth_sdp_record rec;
+        if (get_sdp_record_by_handle(arg->remove_record.record_handle, &rec)) {
+            if (rec.hdr.bt_uuid.len == ESP_UUID_LEN_16) {
+                bta_sys_remove_uuid(rec.hdr.bt_uuid.uuid.uuid16);
+            } else if (rec.hdr.bt_uuid.len == ESP_UUID_LEN_32) {
+                bta_sys_remove_uuid_32(rec.hdr.bt_uuid.uuid.uuid32);
+            } else if (rec.hdr.bt_uuid.len == ESP_UUID_LEN_128) {
+                bta_sys_remove_uuid_128((UINT8 *)&rec.hdr.bt_uuid.uuid.uuid128);
+            }
+        } else {
+            BTC_TRACE_ERROR("%s SDP record with handle %d not found",
+                                __func__, arg->remove_record.record_handle);
+            return;
+        }
+
         /* Get the Record handle, and free the slot */
         /* The application layer record_handle is equivalent to the id of the btc layer */
-        handle = free_sdp_slot(arg->remove_record.record_handle);
+        int slot = get_sdp_slot_id_by_handle(arg->remove_record.record_handle);
+        if (slot < 0) {
+            return;
+        }
+
+        handle = free_sdp_slot(slot);
 
         BTC_TRACE_DEBUG("Sdp Server %s id=%d to handle=0x%08x",
                     __func__, arg->remove_record.record_handle, handle);
