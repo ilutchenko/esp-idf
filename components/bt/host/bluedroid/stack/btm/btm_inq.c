@@ -2597,7 +2597,7 @@ static UINT8 btm_find_match_custom_uuid_slot(tBT_UUID *custom_uuid, tBT_UUID uui
 *******************************************************************************/
 BOOLEAN BTM_HasCustomEirService( tBT_UUID *custom_uuid, tBT_UUID uuid )
 {
-    UINT8 match_slot = btm_find_custom_uuid_slots(custom_uuid, uuid);
+    UINT8 match_slot = btm_find_match_custom_uuid_slot(custom_uuid, uuid);
 
     if (match_slot == BTA_EIR_SERVER_NUM_CUSTOM_UUID) {
         return FALSE;
@@ -2619,7 +2619,7 @@ BOOLEAN BTM_HasCustomEirService( tBT_UUID *custom_uuid, tBT_UUID uuid )
 *******************************************************************************/
 void BTM_AddCustomEirService( tBT_UUID *custom_uuid, tBT_UUID uuid )
 {
-    UINT8 empty_slot = btm_find_custom_uuid_slots(custom_uuid, uuid);
+    UINT8 empty_slot = btm_find_empty_custom_uuid_slot(custom_uuid, uuid);
 
     if (empty_slot == BTA_EIR_SERVER_NUM_CUSTOM_UUID) {
         BTM_TRACE_ERROR("No space to add UUID for EIR");
@@ -2665,9 +2665,7 @@ void BTM_RemoveEirService( UINT32 *p_eir_uuid, UINT16 uuid16 )
 *******************************************************************************/
 void BTM_RemoveCustomEirService( tBT_UUID *custom_uuid, tBT_UUID uuid )
 {
-    UINT8 empty_slot, match_slot;
-
-    btm_find_custom_uuid_slots(custom_uuid, uuid, &empty_slot, &match_slot);
+    UINT8 match_slot = btm_find_match_custom_uuid_slot(custom_uuid, uuid);
 
     if (match_slot == BTA_EIR_SERVER_NUM_CUSTOM_UUID) {
         BTM_TRACE_WARNING("UUID is not found for EIR");
