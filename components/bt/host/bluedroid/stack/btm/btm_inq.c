@@ -2583,6 +2583,30 @@ static UINT8 btm_find_match_custom_uuid_slot(tBT_UUID *custom_uuid, tBT_UUID uui
 
 /*******************************************************************************
 **
+** Function         BTM_HasCustomEirService
+**
+** Description      This function is called to know if UUID is already in custom 
+**                  list.
+**
+** Parameters       custom_uuid - pointer to custom_uuid array in tBTA_DM_CB
+**                  uuid - UUID struct
+**
+** Returns          TRUE - if found
+**                  FALSE - if not found
+**
+*******************************************************************************/
+BOOLEAN BTM_HasCustomEirService( tBT_UUID *custom_uuid, tBT_UUID uuid )
+{
+    UINT8 match_slot = btm_find_custom_uuid_slots(custom_uuid, uuid);
+
+    if (match_slot == BTA_EIR_SERVER_NUM_CUSTOM_UUID) {
+        return FALSE;
+    }
+    return TRUE;
+}
+
+/*******************************************************************************
+**
 ** Function         BTM_AddCustomEirService
 **
 ** Description      This function is called to add a custom UUID.
