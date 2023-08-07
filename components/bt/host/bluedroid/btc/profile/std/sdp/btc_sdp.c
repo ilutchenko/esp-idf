@@ -827,6 +827,17 @@ static bool btc_sdp_remove_record_event(int handle)
     BTC_TRACE_DEBUG("Sdp Server %s", __func__);
 
     if(handle != -1 && handle != 0) {
+        sdp_slot_t *sdp_slot = start_create_sdp(handle);
+        if(sdp_slot != NULL) {
+            bluetooth_sdp_record* rec = sdp_slot->record_data;
+            if (rec->hdr.bt_uuid.len == ESP_UUID_LEN_16){
+                bta_sys_remove_uuid(rec->hdr.bt_uuid.uuid.uuid16);
+            }else if (rec->hdr.bt_uuid.len == ESP_UUID_LEN_32){
+                bta_sys_remove_uuid_32(rec->hdr.bt_uuid.uuid.uuid32);
+            }else if (rec->hdr.bt_uuid.len == ESP_UUID_LEN_128){
+                bta_sys_remove_uuid_128((UINT8 *)&rec->hdr.bt_uuid.uuid.uuid128);
+            }
+        }
         result = SDP_DeleteRecord(handle);
         if(result == false) {
             BTC_TRACE_ERROR("  Unable to remove handle 0x%08x", handle);
