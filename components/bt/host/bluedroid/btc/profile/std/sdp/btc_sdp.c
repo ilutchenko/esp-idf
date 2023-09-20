@@ -277,7 +277,6 @@ static int free_sdp_slot(int id)
         /* safe a copy of the pointer, and free after unlock() */
         record = slot->record_data;
     }
-    osi_mutex_unlock(&sdp_local_param.sdp_slot_mutex);
 
     if(record != NULL) {
         osi_free(record);
@@ -286,7 +285,8 @@ static int free_sdp_slot(int id)
         handle = -1;
     }
     osi_free(slot);
-    slot = NULL;
+    sdp_local_param.sdp_slots[id] = NULL;
+    osi_mutex_unlock(&sdp_local_param.sdp_slot_mutex);
 
     return handle;
 }
