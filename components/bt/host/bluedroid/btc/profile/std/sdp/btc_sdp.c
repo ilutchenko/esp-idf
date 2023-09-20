@@ -844,7 +844,8 @@ static void btc_sdp_dm_cback(tBTA_SDP_EVT event, tBTA_SDP* p_data, void* user_da
     switch (event) {
     case BTA_SDP_CREATE_RECORD_USER_EVT: {
         if (p_data->status == BTA_SDP_SUCCESS) {
-            if(btc_handle_create_record_event((int)user_data) < 0) {
+            p_data->sdp_create_record.handle = btc_handle_create_record_event((int)user_data);
+            if (p_data->sdp_create_record.handle < 0) {
                 p_data->status = BTA_SDP_FAILURE;
             }
         }
